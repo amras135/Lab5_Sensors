@@ -1,0 +1,50 @@
+#include "stm32l476xx.h"
+#include "SysClock.h"
+#include "ADC.h"
+
+volatile uint32_t digoutput;
+volatile double dist_check[100];
+volatile double distance_chk;
+volatile double dec_output;
+//volatile uint32_t x;
+//volatile uint32_t y;
+volatile double voltage;
+volatile double distance;
+
+//volatile double result;
+
+int main(void){
+	//double result = 0;
+	int i = 0;
+	//double z = 0;
+	System_Clock_Init(); // Switch System Clock = 80 MHz
+	
+	// Analog Inputs: 
+	//  PA1 (ADC12_IN6), PA2 (ADC12_IN7)
+	//  These pins are not used: PA0 (ADC12_IN5, PA3 (ADC12_IN8) 
+	//  0V <=> 0, 3.3V <=> 4095
+	ADC_Init();
+	
+
+	
+	while(1){
+		ADC1->CR |= ADC_CR_ADSTART;			
+		while ( (ADC123_COMMON->CSR | ADC_CSR_EOC_MST) == 0);
+		digoutput = ADC1->DR;
+		dec_output = (double)(digoutput);
+		voltage = dec_output/(double)(1241);
+		for( i = 0; i < 100; i++) {
+			dist_check[i] = 27.603*(voltage)*(voltage);
+			dist_check[i] -= 106.96*(voltage);
+			dist_check[i] += 110.31;
+			if(dist_check[i] > 0) distance_chk += dist_check[i];
+		}
+		distance_chk /= 100;
+		if((distance_chk > 10.0) || (distance_chk < 80.0)) {
+			distance = (int)(distance_chk);
+		}
+	}
+}
+
+
+
