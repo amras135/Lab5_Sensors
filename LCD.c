@@ -66,15 +66,18 @@ const uint16_t NumberMap[10] = {
 
 /* Macros used for set/reset bar LCD bar */
 /* LCD BAR status: We don't write directly in LCD RAM for save the bar setting */
-uint8_t t_bar[2] = {0x00,0x00};
 
-#define BAR0_ON  t_bar[1] |= 8
+uint8_t t_bar[2] = {0x0,0x0};
+//uint8_t display[6];
+uint8_t j;
+
+#define BAR0_ON  t_bar[1] & 8
 #define BAR0_OFF t_bar[1] &= ~8
-#define BAR1_ON  t_bar[0] |= 8
+#define BAR1_ON  t_bar[0] & 8
 #define BAR1_OFF t_bar[0] &= ~8
-#define BAR2_ON  t_bar[1] |= 2
+#define BAR2_ON  t_bar[1] & 2
 #define BAR2_OFF t_bar[1] &= ~2
-#define BAR3_ON  t_bar[0] |= 2 
+#define BAR3_ON  t_bar[0] & 2 
 #define BAR3_OFF t_bar[0] &= ~2 
 
 #define DOT                   ((uint16_t) 0x8000 ) /* for add decimal point in string */
@@ -117,7 +120,6 @@ uint8_t t_bar[2] = {0x00,0x00};
 #define C_PERCENT_2           ((uint16_t) 0xb300)
 
 #define C_FULL                ((uint16_t) 0xffdd)
-
 
 void LCD_Initialization(void){
 	LCD_PIN_Init();
@@ -187,33 +189,25 @@ void LCD_PIN_Init(void){
 
 }
 
-void LCD_DisplayName(void){
+void ReflectanceDisplay(uint8_t display[], uint8_t bar0, uint8_t bar1){
 	while (LCD->SR&LCD_SR_UDR); // Wait for Update Display Request Bit
+//	display[0] = '1';
+//	display[1] = '0';
+//	display[2] = 'E';
+//	display[3] = 'R';
+//	display[4] = 'A';
+//	display[5] = 'S';
+	for(j = 0; j < 6; j++) {
+		LCD_WriteChar(&display[j],0,0,j);
+	}
 	
-	LCD->RAM[0] &= 0x0;
-	LCD->RAM[0] |= 0x30C0D058;
 	
-	LCD->RAM[1] &=  0x0;
-	LCD->RAM[1] |= 0x0;
+
 	
-	LCD->RAM[2] &=  0x0;
-	LCD->RAM[2] |= 0x10C06028;
+	t_bar[0] = bar0;
+	t_bar[1] = bar1;
 	
-	LCD->RAM[3] &= 0x0;
-	LCD->RAM[3] |= 0x0;
-	
-	LCD->RAM[4] &= ~ 0x0;
-	LCD->RAM[4] |= 0x00001000;
-	
-	LCD->RAM[5] &= ~ 0x0;
-	LCD->RAM[5] |= 0x0;
-	
-	LCD->RAM[6] &= 0x0;
-	LCD->RAM[6] |= 0x00008020;	
-	
-	LCD->RAM[7] &= 0x0;
-	LCD->RAM[7] |= 0x0;	
-	
+	LCD_bar();
 	
 	LCD->SR |= LCD_SR_UDR; //request update display
 	
@@ -404,7 +398,7 @@ void LCD_bar(void) {
 	if ((BAR2_ON))
 		LCD->RAM[6] |= 1U << 25;
   
-  if (BAR1_ON)
+  if ((BAR3_ON))
 		LCD->RAM[4] |= 1U << 25;
 	
 	LCD->SR |= LCD_SR_UDR; 
